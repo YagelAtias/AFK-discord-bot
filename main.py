@@ -11,7 +11,8 @@ USER_ID = int(os.getenv("USER_ID"))
 FRIEND_1 = int(os.getenv("FRIEND_1"))
 FRIEND_2 = int(os.getenv("FRIEND_2"))
 
-AWAY_ALERT_THRESHOLD_MINUTES = 15
+AWAY_ALERT_THRESHOLD_MINUTES = 30
+LOOP_CHECK_INTERVAL_MINUTES = 5
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
@@ -30,8 +31,8 @@ async def on_voice_state_update(member, before, after):
             last_active[USER_ID] = datetime.datetime.now()
 
 
-# Every 5 minutes check if the user is active, and if not, alert his friends.
-@tasks.loop(minutes=5)
+# Every few minutes check if the user is active, and if not, alert his friends.
+@tasks.loop(minutes=LOOP_CHECK_INTERVAL_MINUTES)
 async def check_user_status():
     await bot.wait_until_ready()
 
