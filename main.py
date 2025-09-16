@@ -46,9 +46,19 @@ async def check_user_status():
             if time_inactive.total_seconds() > AWAY_ALERT_THRESHOLD_MINUTES * 60:
                 channel = bot.get_channel(CHANNEL_ID)
                 if channel:
-                    message = (f"Hey <@{FRIEND_1}> and <@{FRIEND_2}>, don't get baited! <@{USER_ID}> wasn't here for the past"
-                               f" {AWAY_ALERT_THRESHOLD_MINUTES} minutes...")
+                    message = (
+                        f"Hey <@{FRIEND_1}> and <@{FRIEND_2}>, don't get baited! <@{USER_ID}> wasn't here for the past"
+                        f" {AWAY_ALERT_THRESHOLD_MINUTES} minutes...")
                     await channel.send(message)
 
                 # Reset the last active time to prevent spamming
                 del last_active[USER_ID]
+
+
+@bot.event
+async def on_ready():
+    print(f'{bot.user} has connected to Discord!')
+    check_user_status.start()
+
+
+bot.run(DISCORD_TOKEN)
