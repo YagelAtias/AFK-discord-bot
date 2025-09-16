@@ -8,10 +8,9 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL_ID = int(os.getenv('CHANNEL_ID'))
 USER_ID = int(os.getenv("USER_ID"))
-FRIEND_1 = int(os.getenv("FRIEND_1"))
-FRIEND_2 = int(os.getenv("FRIEND_2"))
+FRIENDS = os.getenv("FRIENDS").split(',')
 
-AWAY_ALERT_THRESHOLD_MINUTES = 30
+AWAY_ALERT_THRESHOLD_MINUTES = 15
 LOOP_CHECK_INTERVAL_MINUTES = 5
 intents = discord.Intents.default()
 intents.members = True
@@ -19,8 +18,24 @@ intents.presences = True
 intents.voice_states = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-
 last_active = {}
+
+
+def create_message():
+    friend_mentions = [f"<@{friend.strip()}>" for friend in FRIENDS]
+
+    if not friend_mentions:
+        return f"Hey, <@{USER_ID}> hasn't been here for the past {AWAY_ALERT_THRESHOLD_MINUTES} minutes..."
+
+    mentions_string = ", ".join(friend_mentions[:-1])
+
+    if len(friend_mentions) > 1:
+        mentions_string += f" and {friend_mentions[-1]}"
+    else:
+        mentions_string = friend_mentions[0]
+
+    return (f"Hey {mentions_string}, don't get baited! <@{USER_ID}> hasn't been here for the past "
+            f"{AWAY_ALERT_THRESHOLD_MINUTES} minutes...")
 
 
 # This event happens whenever the voice state changes on discord.
@@ -47,10 +62,7 @@ async def check_user_status():
             if time_inactive.total_seconds() > AWAY_ALERT_THRESHOLD_MINUTES * 60:
                 channel = bot.get_channel(CHANNEL_ID)
                 if channel:
-                    message = (
-                        f"Hey <@{FRIEND_1}> and <@{FRIEND_2}>, don't get baited! <@{USER_ID}> wasn't here for the past"
-                        f" {AWAY_ALERT_THRESHOLD_MINUTES} minutes...")
-                    await channel.send(message)
+                    await channel.send(create_message())
 
                 # Reset the last active time to prevent spamming
                 del last_active[USER_ID]
